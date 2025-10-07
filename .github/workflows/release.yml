@@ -1,0 +1,158 @@
+name: Release Electron App
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Build Electron app (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npm run dist -- --mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build Electron app (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npm run dist -- --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build Electron app (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run dist -- --linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Upload artifacts (macOS)
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: |
+            dist/*.dmg
+            dist/*.zip
+            
+      - name: Upload artifacts (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            dist/*.exe
+            dist/*.msi
+            
+      - name: Upload artifacts (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist-artifacts
+          
+      - name: Display structure of downloaded files
+        run: ls -la ./dist-artifacts/
+        
+      - name: Get release version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Electron Authenticator ${{ steps.version.outputs.version }}
+          body: |
+            ## 🎉 Nouvelle version d'Electron Authenticator
+            
+            ### Téléchargements
+            - **macOS**: Téléchargez le fichier `.dmg`
+            - **Windows**: Téléchargez le fichier `.exe`
+            - **Linux**: Téléchargez le fichier `.AppImage`
+            
+            ### Changements
+            Voir les commits pour les détails des changements.
+            
+            ---
+            
+            Merci d'utiliser Electron Authenticator! 🔐
+          draft: false
+          prerelease: false
+          
+      - name: Upload Release Assets
+        run: |
+          # Upload macOS files
+          for file in ./dist-artifacts/macos-build/*; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file"
+              gh release upload ${{ steps.version.outputs.version }} "$file" --clobber
+            fi
+          done
+          
+          # Upload Windows files
+          for file in ./dist-artifacts/windows-build/*; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file"
+              gh release upload ${{ steps.version.outputs.version }} "$file" --clobber
+            fi
+          done
+          
+          # Upload Linux files
+          for file in ./dist-artifacts/linux-build/*; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file"
+              gh release upload ${{ steps.version.outputs.version }} "$file" --clobber
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

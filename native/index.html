@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authenticator</title>
+    
+    <!-- Favicon and app icons -->
+    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../assets/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="../assets/android-chrome-512x512.png">
+    <link rel="manifest" href="../assets/site.webmanifest">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <h1>🔐 Authenticator</h1>
+            <div class="header-actions">
+                <button id="import-button" class="action-button" title="Importer des comptes">
+                    📥 Importer
+                </button>
+                <button id="export-button" class="action-button" title="Exporter les comptes">
+                    📤 Exporter
+                </button>
+                <button id="add-button" class="add-button">+ Ajouter un compte</button>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher un compte...">
+            </div>
+
+            <div id="loading" class="loading hidden">
+                <div class="loading-spinner">Chargement...</div>
+            </div>
+
+            <div id="empty-state" class="empty-state hidden">
+                <h2>Aucun compte configuré</h2>
+                <p>Ajoutez votre premier compte pour commencer à générer des codes d'authentification.</p>
+                <button id="add-first-button" class="primary-button">Ajouter un compte</button>
+            </div>
+
+            <div id="accounts-container" class="accounts-grid"></div>
+        </main>
+    </div>
+
+    <!-- Modal pour ajouter/éditer un compte -->
+    <div id="account-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Ajouter un compte</h3>
+                <button id="close-modal" class="close-button">&times;</button>
+            </div>
+            <form id="account-form">
+                <div class="form-group">
+                    <label for="service">Service</label>
+                    <input type="text" id="service" name="service" required placeholder="Ex: Google, GitHub, AWS...">
+                </div>
+                <div class="form-group">
+                    <label for="username">Nom d'utilisateur</label>
+                    <input type="text" id="username" name="username" required placeholder="Votre nom d'utilisateur">
+                </div>
+                <div class="form-group">
+                    <label for="secret">Clé secrète</label>
+                    <input type="text" id="secret" name="secret" required placeholder="Clé secrète en base32">
+                    <small>Scannez le QR code ou copiez la clé secrète de votre service</small>
+                </div>
+                
+                <div class="advanced-options">
+                    <button type="button" id="toggle-advanced" class="toggle-advanced-button">
+                        ⚙️ Options avancées
+                    </button>
+                    <div id="advanced-fields" class="advanced-fields hidden">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="algorithm">Algorithme</label>
+                                <select id="algorithm" name="algorithm">
+                                    <option value="SHA1">SHA1</option>
+                                    <option value="SHA256">SHA256</option>
+                                    <option value="SHA512">SHA512</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="digits">Chiffres</label>
+                                <select id="digits" name="digits">
+                                    <option value="6">6</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="period">Période (s)</label>
+                                <input type="number" id="period" name="period" value="30" min="15" max="300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" id="cancel-button" class="cancel-button">Annuler</button>
+                    <button type="submit" class="save-button">Sauvegarder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal pour export -->
+    <div id="export-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Exporter les comptes</h3>
+                <button id="close-export-modal" class="close-button">&times;</button>
+            </div>
+            <div class="export-options">
+                <p>Choisissez le format d'export :</p>
+                <div class="export-format-options">
+                    <label class="radio-option">
+                        <input type="radio" name="export-format" value="native" checked>
+                        <span class="radio-label">
+                            <strong>Format natif</strong>
+                            <small>Compatible avec cette application uniquement</small>
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="export-format" value="google">
+                        <span class="radio-label">
+                            <strong>Format Google Authenticator</strong>
+                            <small>Compatible avec Google Authenticator et applications similaires</small>
+                        </span>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancel-export-button" class="cancel-button">Annuler</button>
+                    <button type="button" id="confirm-export-button" class="save-button">Exporter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

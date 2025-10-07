@@ -1,0 +1,25 @@
+{
+  "name": "electron-authenticator-docs",
+  "version": "1.0.0",
+  "description": "Documentation site for Electron Authenticator",
+  "type": "module",
+  "scripts": {
+    "docs:dev": "vitepress dev",
+    "docs:build": "vitepress build",
+    "docs:preview": "vitepress preview",
+    "vitepress:dev": "vitepress dev",
+    "vitepress:build": "vitepress build",
+    "vitepress:preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "vitepress": "^2.0.0-alpha.12"
+  },
+  "keywords": [
+    "electron",
+    "authenticator",
+    "2fa",
+    "documentation"
+  ],
+  "author": "",
+  "license": "ISC"
+}
