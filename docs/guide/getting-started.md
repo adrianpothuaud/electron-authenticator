@@ -97,5 +97,3 @@ Accédez aux paramètres via le menu ou le raccourci `Ctrl/Cmd + ,` :
 - **Sécurité** : Délai de verrouillage automatique
 
 ---
-
-**Prochaine étape** : [Configuration avancée →](/guide/configuration)

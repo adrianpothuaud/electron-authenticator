@@ -18,7 +18,7 @@ npm install
 ```bash
 npm run docs:dev
 ```
-Le site sera accessible sur http://localhost:5173
+Le site sera accessible sur votre navigateur à l'adresse locale indiquée dans le terminal
 
 ### Build de production
 ```bash
